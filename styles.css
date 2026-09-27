@@ -117,27 +117,36 @@ section + section { border-top: 1px solid var(--border); }
   gap: 12px;
   margin-top: 32px;
 }
-.btn {
+/* 스토어 링크 공통: 히어로 버튼 4개/배지 모두 같은 표면·테두리·호버 */
+.store-link {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  height: 52px;
-  padding-inline: 22px;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 16px;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text);
   white-space: nowrap;
+  transition: background-color 120ms ease, border-color 120ms ease, transform 120ms ease;
 }
-.btn:hover { text-decoration: none; border-color: var(--muted); }
-.btn-primary {
-  background: var(--lime);
-  border-color: var(--lime);
-  color: #0B0B0F;
+.store-link:hover,
+.store-link:focus-visible {
+  text-decoration: none;
+  background: #1E1E26;
+  border-color: #3A3A44;
+  transform: translateY(-1px);
 }
-.btn-primary:hover { border-color: var(--lime); filter: brightness(1.05); }
+.store-link:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+.store-mark { flex: none; width: 18px; height: 18px; }
+
+/* 히어로 버튼 */
+.store-btn {
+  justify-content: center;
+  gap: 10px;
+  height: 52px;
+  padding-inline: 22px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-size: 16px;
+}
 
 /* 스크린샷 프레임: 화면마다 여백이 달라도 틀은 같게 */
 .frame {
@@ -211,21 +220,15 @@ section + section { border-top: 1px solid var(--border); }
   max-width: 480px;
 }
 .store {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
+  gap: 16px;
   height: 72px;
   padding-inline: 24px;
   border-radius: 16px;
-  border: 1px solid var(--border);
-  background: var(--surface);
   line-height: 1.2;
-  white-space: nowrap;
 }
-.store:hover { text-decoration: none; border-color: var(--muted); }
-.store-primary { background: var(--lime); border-color: var(--lime); color: #0B0B0F; }
-.store-primary:hover { border-color: var(--lime); filter: brightness(1.05); }
-.store-k { font-size: 12px; font-weight: 700; opacity: 0.75; }
+.store .store-mark { width: 26px; height: 26px; }
+.store-text { display: flex; flex-direction: column; justify-content: center; }
+.store-k { font-size: 12px; font-weight: 700; opacity: 0.75; text-transform: uppercase; letter-spacing: 0.04em; }
 .store-n { font-size: 24px; font-weight: 900; letter-spacing: -0.01em; }
 .download-frame { width: min(260px, 66vw); margin: 0 auto; }
 
@@ -407,6 +410,7 @@ section + section { border-top: 1px solid var(--border); }
   #download h2 { font-size: 80px; }
   .store-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 560px; margin-top: 36px; }
   .store { height: 84px; }
+  .store .store-mark { width: 30px; height: 30px; }
   .store-n { font-size: 28px; }
   .download-frame { width: 300px; margin: 0; }
 
