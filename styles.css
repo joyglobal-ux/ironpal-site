@@ -423,3 +423,7 @@ section + section { border-top: 1px solid var(--border); }
 
 /* 출시 전 스토어 버튼 (Google Play 비공개 테스트 중) */
 .store-link.is-soon { opacity: .45; pointer-events: none; cursor: default; }
+
+/* 히어로 크레딧 한 줄 (10/23, B안) */
+.hero .kicker { color: var(--lime); font-weight: 700; font-size: 14px; letter-spacing: .02em; margin-bottom: 14px; }
+@media (min-width: 900px) { .hero .kicker { font-size: 16px; margin-bottom: 18px; } }
