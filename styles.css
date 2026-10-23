@@ -420,3 +420,6 @@ section + section { border-top: 1px solid var(--border); }
 /* 로고 록업(brand 변형): 마크 라임 + 글자 흰색 */
 .wordmark{display:inline-flex;align-items:center;gap:10px}
 .wordmark .mark{fill:#C6FF3D;flex:none}
+
+/* 출시 전 스토어 버튼 (Google Play 비공개 테스트 중) */
+.store-link.is-soon { opacity: .45; pointer-events: none; cursor: default; }
