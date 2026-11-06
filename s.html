@@ -55,8 +55,10 @@
     function draw() {
       c.fillStyle = '#0B0B0F'; c.fillRect(0, 0, W, H);
       c.textBaseline = 'alphabetic';
-      c.fillStyle = '#C6FF3D'; c.font = '800 30px ' + FONT;
-      c.fillText(fit(S.fromLine(plan), W - PAD * 2), PAD, 92);
+      if (plan.from) {
+        c.fillStyle = '#C6FF3D'; c.font = '800 30px ' + FONT;
+        c.fillText(fit(S.fromLine(plan), W - PAD * 2), PAD, 92);
+      }
       c.fillStyle = '#F2F2F5'; c.font = '900 62px ' + FONT;
       c.fillText(fit(plan.title, W - PAD * 2), PAD, 170);
       c.fillStyle = '#A0A0AC'; c.font = '500 30px ' + FONT;
@@ -100,7 +102,7 @@
           objectType: 'feed',
           content: {
             title: plan.title,
-            description: S.fromLine(plan) + ' · ' + S.summary(plan),
+            description: (plan.from ? S.fromLine(plan) + ' · ' : '') + S.summary(plan),
             imageUrl: res.infos.original.url,
             imageWidth: 810, imageHeight: 1080,
             link: { mobileWebUrl: link, webUrl: 'https://ironpal.kr/' },
