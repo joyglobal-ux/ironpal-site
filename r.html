@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <meta name="referrer" content="no-referrer">
+  <title>받은 운동 — 쇠친</title>
+  <meta name="description" content="친구나 코치가 보낸 운동이에요. 쇠친에서 내 계획에 넣을 수 있어요.">
+  <meta name="theme-color" content="#0B0B0F">
+  <link rel="icon" type="image/png" sizes="512x512" href="assets/icon-512.png">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="쇠친 · 쇠질친구">
+  <meta property="og:title" content="받은 운동이 있어요">
+  <meta property="og:description" content="눌러서 보고, 내 계획에 바로 넣으세요.">
+  <meta property="og:image" content="https://ironpal.kr/assets/og.png">
+  <style>
+    :root { --bg:#0B0B0F; --card:#16161C; --alt:#1E1E26; --text:#F2F2F5; --dim:#A0A0AC; --lime:#C6FF3D; --ink:#0B0B0F; }
+    * { box-sizing:border-box; margin:0; }
+    html { -webkit-text-size-adjust:100%; }
+    body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR',sans-serif; line-height:1.45; min-height:100vh; }
+    main { max-width:440px; margin:0 auto; padding:24px 16px calc(176px + env(safe-area-inset-bottom)); }
+    .from { color:var(--lime); font-size:14px; font-weight:800; }
+    h1 { font-size:28px; font-weight:900; margin-top:4px; overflow-wrap:anywhere; }
+    .sum { color:var(--dim); font-size:14px; margin-top:4px; }
+    h2 { font-size:15px; font-weight:800; margin:24px 0 8px; overflow-wrap:anywhere; }
+    .list { background:var(--card); border-radius:16px; margin-top:16px; overflow:hidden; }
+    h2 + .list { margin-top:0; }
+    .row { display:flex; justify-content:space-between; gap:12px; padding:13px 16px; border-top:1px solid var(--alt); }
+    .row:first-child { border-top:0; }
+    .name { font-weight:700; min-width:0; overflow-wrap:anywhere; }
+    .spec { color:var(--dim); font-size:14px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+    .foot { position:fixed; left:0; right:0; bottom:0; background:linear-gradient(transparent,var(--bg) 18%); padding:24px 16px calc(14px + env(safe-area-inset-bottom)); }
+    .foot > div { max-width:408px; margin:0 auto; }
+    .btn { display:block; width:100%; text-align:center; text-decoration:none; border-radius:14px; padding:15px; font-size:17px; font-weight:900; }
+    .open { background:var(--lime); color:var(--ink); }
+    .get { background:var(--alt); color:var(--text); margin-top:8px; font-weight:800; font-size:15px; }
+    .note { color:var(--dim); font-size:13px; text-align:center; margin-top:10px; }
+    .bad { text-align:center; padding-top:30vh; }
+    .bad p { color:var(--dim); margin-top:8px; }
+    [hidden] { display:none !important; }
+  </style>
+</head>
+<body>
+  <main id="plan" hidden>
+    <p class="from" id="from"></p>
+    <h1 id="title"></h1>
+    <p class="sum" id="sum"></p>
+    <div id="days"></div>
+  </main>
+  <main id="bad" class="bad" hidden>
+    <h1>열 수 없는 링크예요</h1>
+    <p>주소가 잘렸을 수 있어요. 보낸 사람에게 다시 받아 주세요.</p>
+  </main>
+  <div class="foot" id="foot" hidden><div>
+    <a class="btn open" id="open">쇠친에서 열기</a>
+    <a class="btn get" id="get" href="https://apps.apple.com/kr/app/id6820119682">쇠친 받기</a>
+    <p class="note" id="note">앱을 받은 뒤 카톡으로 돌아와 이 링크를 한 번 더 눌러 주세요.</p>
+  </div></div>
+  <script src="assets/shared-plan.js"></script>
+  <script>
+  (function () {
+    var S = window.IronShare;
+    function el(tag, cls, text) {
+      var n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (text != null) n.textContent = text;
+      return n;
+    }
+    var encoded = S.payload();
+    var plan = S.read(encoded);
+    if (!plan) { document.getElementById('bad').hidden = false; return; }
+
+    document.getElementById('from').textContent = S.fromLine(plan);
+    document.getElementById('title').textContent = plan.title;
+    document.getElementById('sum').textContent = S.summary(plan);
+    var box = document.getElementById('days');
+    plan.days.forEach(function (d) {
+      if (plan.days.length > 1) box.appendChild(el('h2', '', d.name));
+      var list = el('div', 'list');
+      d.ex.forEach(function (e) {
+        var row = el('div', 'row');
+        row.appendChild(el('span', 'name', e.name));
+        row.appendChild(el('span', 'spec', S.spec(e)));
+        list.appendChild(row);
+      });
+      box.appendChild(list);
+    });
+    document.getElementById('plan').hidden = false;
+    document.getElementById('foot').hidden = false;
+    document.getElementById('open').href = 'ironlog://received?d=' + encoded;
+
+    if (/Android/i.test(navigator.userAgent)) {
+      var get = document.getElementById('get');
+      get.href = 'https://ironpal.kr/get/';
+      get.textContent = '안드로이드 테스트 신청';
+      document.getElementById('note').textContent = '안드로이드는 지금 테스트 중이에요. 앱이 있으면 쇠친에서 열기를 눌러 주세요.';
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <meta name="referrer" content="no-referrer">
+  <title>운동 보내기 — 쇠친</title>
+  <meta name="theme-color" content="#0B0B0F">
+  <link rel="icon" type="image/png" sizes="512x512" href="assets/icon-512.png">
+  <style>
+    :root { --bg:#0B0B0F; --alt:#1E1E26; --text:#F2F2F5; --dim:#A0A0AC; --lime:#C6FF3D; --ink:#0B0B0F; }
+    * { box-sizing:border-box; margin:0; }
+    body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR',sans-serif; min-height:100vh; }
+    main { max-width:400px; margin:0 auto; padding:16px 16px calc(120px + env(safe-area-inset-bottom)); }
+    canvas { width:100%; height:auto; border-radius:18px; display:block; }
+    .foot { position:fixed; left:0; right:0; bottom:0; background:linear-gradient(transparent,var(--bg) 18%); padding:24px 16px calc(14px + env(safe-area-inset-bottom)); }
+    button { display:block; width:100%; max-width:368px; margin:0 auto; border:0; border-radius:14px; padding:16px; font:inherit; font-size:17px; font-weight:900; background:var(--lime); color:var(--ink); }
+    button:disabled { opacity:.5; }
+    .msg { color:var(--dim); font-size:13px; text-align:center; margin-top:10px; min-height:18px; }
+    .bad { text-align:center; padding-top:30vh; }
+    [hidden] { display:none !important; }
+  </style>
+</head>
+<body>
+  <main id="plan" hidden><canvas id="card" width="810" height="1080" aria-label="운동 카드"></canvas></main>
+  <main id="bad" class="bad" hidden><h1>열 수 없는 링크예요</h1></main>
+  <div class="foot" id="foot" hidden>
+    <button id="send">카카오톡으로 보내기</button>
+    <p class="msg" id="msg"></p>
+  </div>
+  <script src="assets/shared-plan.js"></script>
+  <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.8.0/kakao.min.js"></script>
+  <script>
+  // 앱의 `카톡으로 보내기`가 여는 페이지. 카드를 다시 그려 카카오에 올리고, 이미지와 버튼이 있는 메시지를 보낸다.
+  // JS 키는 등록한 도메인에서만 도는 공개 키다. 비어 있으면 휴대폰 공유 창으로 이미지와 링크를 넘긴다.
+  (function () {
+    var KAKAO_JS_KEY = '';
+    var S = window.IronShare;
+    var encoded = S.payload();
+    var plan = S.read(encoded);
+    if (!plan) { document.getElementById('bad').hidden = false; return; }
+    var link = 'https://ironpal.kr/r#' + encoded;
+
+    var W = 810, H = 1080, PAD = 54;
+    var canvas = document.getElementById('card');
+    var c = canvas.getContext('2d');
+    var FONT = "-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR',sans-serif";
+    function fit(text, max) {
+      if (c.measureText(text).width <= max) return text;
+      var chars = Array.from(text);
+      while (chars.length && c.measureText(chars.join('') + '…').width > max) chars.pop();
+      return chars.join('') + '…';
+    }
+    function draw() {
+      c.fillStyle = '#0B0B0F'; c.fillRect(0, 0, W, H);
+      c.textBaseline = 'alphabetic';
+      c.fillStyle = '#C6FF3D'; c.font = '800 30px ' + FONT;
+      c.fillText(fit(S.fromLine(plan), W - PAD * 2), PAD, 92);
+      c.fillStyle = '#F2F2F5'; c.font = '900 62px ' + FONT;
+      c.fillText(fit(plan.title, W - PAD * 2), PAD, 170);
+      c.fillStyle = '#A0A0AC'; c.font = '500 30px ' + FONT;
+      c.fillText(S.summary(plan), PAD, 222);
+      var rows = [];
+      if (plan.days.length > 1) plan.days.forEach(function (d) { rows.push([d.name, '운동 ' + d.ex.length + '개']); });
+      else plan.days[0].ex.forEach(function (e) { rows.push([e.name, S.spec(e)]); });
+      var top = 268, bottom = H - 126;
+      var rowH = Math.max(92, Math.min(132, Math.floor((bottom - top) / rows.length)));
+      var max = Math.floor((bottom - top) / rowH);
+      var more = rows.length > max ? rows.length - (max - 1) : 0;
+      var show = more ? rows.slice(0, max - 1) : rows;
+      c.fillStyle = '#16161C';
+      c.beginPath(); c.roundRect(PAD - 14, top, W - (PAD - 14) * 2, (show.length + (more ? 1 : 0)) * rowH, 26); c.fill();
+      show.forEach(function (r, i) {
+        var y = top + i * rowH + rowH / 2 + 11;
+        c.font = '500 28px ' + FONT; c.fillStyle = '#A0A0AC';
+        var specW = c.measureText(r[1]).width;
+        c.textAlign = 'right'; c.fillText(r[1], W - PAD - 12, y); c.textAlign = 'left';
+        c.font = '800 32px ' + FONT; c.fillStyle = '#F2F2F5';
+        c.fillText(fit(r[0], W - PAD * 2 - specW - 48), PAD + 12, y);
+        if (i) { c.fillStyle = '#1E1E26'; c.fillRect(PAD + 12, top + i * rowH, W - PAD * 2 - 24, 2); }
+      });
+      if (more) {
+        c.font = '800 28px ' + FONT; c.fillStyle = '#C6FF3D';
+        c.fillText('외 ' + more + '개', PAD + 12, top + show.length * rowH + rowH / 2 + 11);
+      }
+      c.fillStyle = '#F2F2F5'; c.font = '900 34px ' + FONT; c.fillText('쇠친', PAD, H - 56);
+    }
+    draw();
+    document.getElementById('plan').hidden = false;
+    document.getElementById('foot').hidden = false;
+
+    var msg = document.getElementById('msg');
+    var btn = document.getElementById('send');
+    function png() { return new Promise(function (ok) { canvas.toBlob(function (b) { ok(new File([b], 'soechin-workout.png', { type: 'image/png' })); }, 'image/png'); }); }
+    function viaKakao(file) {
+      if (!window.Kakao.isInitialized()) window.Kakao.init(KAKAO_JS_KEY);
+      return window.Kakao.Share.uploadImage({ file: [file] }).then(function (res) {
+        window.Kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: {
+            title: plan.title,
+            description: S.fromLine(plan) + ' · ' + S.summary(plan),
+            imageUrl: res.infos.original.url,
+            imageWidth: 810, imageHeight: 1080,
+            link: { mobileWebUrl: link, webUrl: 'https://ironpal.kr/' },
+          },
+          buttons: [{ title: '운동 받기', link: { mobileWebUrl: link, webUrl: 'https://ironpal.kr/' } }],
+          installTalk: true,
+        });
+      });
+    }
+    function viaSheet(file) {
+      var data = { files: [file], text: S.fromLine(plan) + '\n' + link };
+      if (navigator.canShare && navigator.canShare(data)) return navigator.share(data);
+      return Promise.reject(new Error('share'));
+    }
+    btn.addEventListener('click', function () {
+      btn.disabled = true; msg.textContent = '';
+      png().then(function (file) { return KAKAO_JS_KEY && window.Kakao ? viaKakao(file) : viaSheet(file); })
+        .catch(function (e) { if (!e || e.name !== 'AbortError') msg.textContent = '보내지 못했어요. 다시 눌러 주세요.'; })
+        .then(function () { btn.disabled = false; });
+    });
+  })();
+  </script>
+</body>
+</html>
