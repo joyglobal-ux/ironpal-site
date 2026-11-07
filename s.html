@@ -26,13 +26,13 @@
   <main id="plan" hidden><canvas id="card" width="810" height="1080" aria-label="운동 카드"></canvas></main>
   <main id="bad" class="bad" hidden><h1>열 수 없는 링크예요</h1></main>
   <div class="foot" id="foot" hidden>
-    <button id="send">카카오톡으로 보내기</button>
+    <button id="send">보내기</button>
     <p class="msg" id="msg"></p>
   </div>
   <script src="assets/shared-plan.js"></script>
   <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.8.0/kakao.min.js"></script>
   <script>
-  // 앱의 `카톡으로 보내기`가 여는 페이지. 카드를 다시 그려 카카오에 올리고, 이미지와 버튼이 있는 메시지를 보낸다.
+  // 앱의 `보내기`가 여는 페이지. 카드를 다시 그려 카카오에 올리고, 이미지와 버튼이 있는 메시지를 보낸다.
   // JS 키는 등록한 도메인에서만 도는 공개 키다. 비어 있으면 휴대폰 공유 창으로 이미지와 링크를 넘긴다.
   (function () {
     var KAKAO_JS_KEY = 'c30fad160f1f82be9bd8a697a2fc2690';
@@ -40,7 +40,7 @@
     var encoded = S.payload();
     var plan = S.read(encoded);
     if (!plan) { document.getElementById('bad').hidden = false; return; }
-    var link = 'https://ironpal.kr/r#' + encoded;
+    var link = 'https://ironpal.kr/r?d=' + encoded;
 
     var W = 810, H = 1080, PAD = 54;
     var canvas = document.getElementById('card');
@@ -95,19 +95,21 @@
     var msg = document.getElementById('msg');
     var btn = document.getElementById('send');
     function png() { return new Promise(function (ok) { canvas.toBlob(function (b) { ok(new File([b], 'soechin-workout.png', { type: 'image/png' })); }, 'image/png'); }); }
+    // 메시지 템플릿 138725: 링크는 인자 하나로 한 번만 실린다. 기본 템플릿은 링크가 여러 번 복제돼 1,000자에서 10,000자 제한을 넘었다(11/7 측정).
+    // 모바일 링크만 인자를 쓴다. PC까지 쓰면 한 번 더 복제돼 한계가 2,100자로 준다. 지금 한계는 약 4,200자.
+    var TEMPLATE_ID = 138725;
+    var MAX_LINK = 4100;
     function viaKakao(file) {
       if (!window.Kakao.isInitialized()) window.Kakao.init(KAKAO_JS_KEY);
       return window.Kakao.Share.uploadImage({ file: [file] }).then(function (res) {
-        window.Kakao.Share.sendDefault({
-          objectType: 'feed',
-          content: {
+        window.Kakao.Share.sendCustom({
+          templateId: TEMPLATE_ID,
+          templateArgs: {
+            THU: res.infos.original.url,
             title: plan.title,
-            description: (plan.from ? S.fromLine(plan) + ' · ' : '') + S.summary(plan),
-            imageUrl: res.infos.original.url,
-            imageWidth: 810, imageHeight: 1080,
-            link: { mobileWebUrl: link, webUrl: 'https://ironpal.kr/' },
+            desc: (plan.from ? S.fromLine(plan) + ' · ' : '') + S.summary(plan),
+            d: encoded,
           },
-          buttons: [{ title: '운동 받기', link: { mobileWebUrl: link, webUrl: 'https://ironpal.kr/' } }],
           installTalk: true,
         });
       });
@@ -119,7 +121,7 @@
     }
     btn.addEventListener('click', function () {
       btn.disabled = true; msg.textContent = '';
-      png().then(function (file) { return KAKAO_JS_KEY && window.Kakao ? viaKakao(file) : viaSheet(file); })
+      png().then(function (file) { return KAKAO_JS_KEY && window.Kakao && encoded.length <= MAX_LINK ? viaKakao(file) : viaSheet(file); })
         .catch(function (e) { if (!e || e.name !== 'AbortError') msg.textContent = '보내지 못했어요. 다시 눌러 주세요.'; })
         .then(function () { btn.disabled = false; });
     });
